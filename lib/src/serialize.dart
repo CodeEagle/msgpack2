@@ -1,18 +1,20 @@
 part of msgpack;
 
-Uint8Encoder _uInt8Packer;
+Uint8Encoder? _uInt8Packer;
 
 /// This is a convenience function to pack a value to MsgPack Uint8List. It will
 /// handle creating the serializer, initializing the state and returning the
 /// properly allocated list. It will reuse an existing instance of the
 /// serializer if one exists in order to limit memory usage.
 Uint8List serialize(dynamic value) {
-  if (_uInt8Packer == null) {
-    _uInt8Packer = Uint8Encoder();
+  Uint8Encoder? uInt8Packer = _uInt8Packer;
+  if (uInt8Packer == null) {
+    uInt8Packer = Uint8Encoder();
+    _uInt8Packer = uInt8Packer;
   }
 
-  _uInt8Packer.encode(value);
-  return _uInt8Packer.done();
+  uInt8Packer.encode(value);
+  return uInt8Packer.done();
 }
 
 @deprecated
@@ -26,9 +28,9 @@ class Uint8Encoder {
   List<Uint8List> _buffers = <Uint8List>[];
   int _curBufId = 0;
 
-  Uint8List _list;
+  late Uint8List _list;
   Uint8List get list => _list;
-  ByteData _bd;
+  late ByteData _bd;
   ByteData get byteData => _bd;
   int _offset = 0;
   int _cachedBytes = 0;
@@ -39,11 +41,12 @@ class Uint8Encoder {
   ///
   /// The instance may create additional buffers of the same size as the
   /// initializing list if the data exceeds the limit of the provided list.
-  Uint8Encoder([this._list]) {
-    if (_list == null) {
+  Uint8Encoder([Uint8List? list]) {
+    if (list == null) {
       _list = Uint8List(_bufferSize);
     } else {
-      _bufferSize = _list.lengthInBytes;
+      _list = list;
+      _bufferSize = list.lengthInBytes;
     }
     _bd = ByteData.view(_list.buffer);
   }
@@ -303,7 +306,7 @@ class Uint8Encoder {
   void encodeString(String value) {
     Uint8List encoded;
     if (StringCache.has(value)) {
-      encoded = StringCache.get(value);
+      encoded = Uint8List.fromList(StringCache.get(value)!);
     } else {
       encoded = _toUTF8(value);
     }
@@ -482,13 +485,13 @@ class Uint8Encoder {
 
     var data = packer.done();
     _checkBuffer();
-    ExtType type;
+    ExtType? type;
 
     var len = data.lengthInBytes;
     if (len == 1) {
       type = ExtType.FixExt1;
     } else if (len == 2) {
-      type == ExtType.FixExt2;
+      type = ExtType.FixExt2;
     } else if (len == 4) {
       type = ExtType.FixExt4;
     } else if (len == 8) {
@@ -567,7 +570,7 @@ class Uint8Encoder {
     var out = _collectData();
 
     if (!reuse) {
-      _buffers = List<Uint8List>();
+      _buffers = [];
       _list = Uint8List(_bufferSize);
     }
 

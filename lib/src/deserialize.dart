@@ -19,10 +19,10 @@ dynamic deserialize(dynamic input) {
   if (_uInt8Unpacker == null) {
     _uInt8Unpacker = Uint8Decoder(buffer);
   } else {
-    _uInt8Unpacker.reset(buffer);
+    _uInt8Unpacker!.reset(buffer);
   }
 
-  return _uInt8Unpacker.decode();
+  return _uInt8Unpacker!.decode();
 }
 
 @deprecated
@@ -30,13 +30,13 @@ dynamic unpack(dynamic input) {
   return deserialize(input);
 }
 
-Uint8Decoder _uInt8Unpacker;
+Uint8Decoder? _uInt8Unpacker;
 
 /// This class manages the backing buffer and ByteData of the provided Uint8List
 /// and provides methods to unpack the Message Pack data.
 class Uint8Decoder {
   Uint8List list;
-  ByteData _bd;
+  late ByteData _bd;
   int _offset = 0;
 
   /// This creates a new instance of the deserializer initialized with the
@@ -107,7 +107,7 @@ class Uint8Decoder {
   /// initial type byte must already be read and the offset at the next byte.
   /// It returns the binary data as a ByteData view.
   ByteData decodeBinary(BinaryType type) {
-    int count;
+    int count = 0;
 
     switch (type) {
       case BinaryType.Bin8:
@@ -147,7 +147,7 @@ class Uint8Decoder {
   /// This  will unpack an integer value of size specified by [IntType]. The
   /// initial type byte must already be read and the offset at the next byte.
   int decodeInt(IntType type) {
-    int value;
+    int value = 0;
     switch (type) {
       case IntType.Uint8:
         value = list[_offset++];
@@ -191,8 +191,8 @@ class Uint8Decoder {
   /// It will read the appropriate size and type id, however the
   /// initial type byte must already be read and the offset at the next byte.
   dynamic decodeExtension(ExtType type) {
-    ExtensionFormat builder;
-    int length;
+    ExtensionFormat? builder;
+    int length = 0;
     if (type.value <= ExtType.Ext32.value) {
       switch (type) {
         case ExtType.Ext8:
@@ -279,7 +279,7 @@ class Uint8Decoder {
   /// of the Array will be read by the method. However the
   /// initial type byte must already be read and the offset at the next byte.
   List decodeArray(ArrayType type) {
-    int count;
+    int count = 0;
 
     switch (type) {
       case ArrayType.FixArray:
@@ -295,7 +295,7 @@ class Uint8Decoder {
         break;
     }
 
-    List value = List(count);
+    List value = List.filled(count, null);
     for (var i = 0; i < count; i++) {
       value[i] = decode();
     }
@@ -307,7 +307,7 @@ class Uint8Decoder {
   /// of the Map will be read by the method. However the
   /// initial type byte must already be read and the offset at the next byte.
   Map decodeMap(MapType type) {
-    int count;
+    int count = 0;
 
     switch (type) {
       case MapType.FixMap:

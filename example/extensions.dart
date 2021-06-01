@@ -33,13 +33,16 @@ class OtherExample {
 
 class ExampleBuilder implements ExtensionFormat {
   final typeId = 2;
-  final OtherExample example;
+  final OtherExample? example;
 
   ExampleBuilder(this.example);
 
   void encode(Uint8Encoder encoder) {
-    encoder.encodeString(example.data);
-    encoder.encodeInt(example.number);
+    final exp = example;
+    if (exp != null) {
+      encoder.encodeString(exp.data);
+      encoder.encodeInt(exp.number);
+    }
   }
 
   OtherExample decode(Uint8Decoder decoder) {
